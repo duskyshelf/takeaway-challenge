@@ -92,6 +92,3 @@ DEPENDENCIES
   rubocop
   rubocop-rspec
   twilio-ruby
-
-BUNDLED WITH
-   1.10.4

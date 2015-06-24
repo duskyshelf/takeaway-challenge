@@ -5,7 +5,7 @@ describe Takeaway do
   it{ is_expected.to respond_to(:view_dishes) }
 
   it 'displays dishes when view_dishes is called' do
-  expect(subject.view_dishes).to eq({:bacon => 2.50, :cheese => 1.00, :pizza => 5.00, :cake => 4.32, :carrots => 1.20, :pie => 2.00})
+    expect(subject.view_dishes).to eq({:bacon => 2.50, :cheese => 1.00, :pizza => 5.00, :cake => 4.32, :carrots => 1.20, :pie => 2.00})
   end
 
   context 'select_dish' do
@@ -13,16 +13,16 @@ describe Takeaway do
     it{ is_expected.to respond_to(:select_dish).with(2).argument }
 
     it 'allows the selection of "bacon" from the menu' do
-    expect(subject.select_dish(:bacon, 1)).to eq [[:bacon, 1]]
+      expect(subject.select_dish(:bacon, 1)).to eq [[:bacon, 1]] # magic numbers! Consider having this as a hash rather than an array. Using keyword arguments would help with this.
     end
 
     it 'allows the selection of multiple dishes from the menu' do
-    subject.select_dish(:bacon, 1)
-    expect(subject.select_dish(:cheese, 2)).to eq [[:bacon, 1], [:cheese, 2]]
+      subject.select_dish(:bacon, 1)
+      expect(subject.select_dish(:cheese, 2)).to eq [[:bacon, 1], [:cheese, 2]] # same here
     end
 
-    it 'doesn\'t allow for dishes not on the menu to be ordered' do
-    expect{subject.select_dish(:fish, 1)}.to raise_error 'dish not on menu'
+    it "doesn't allow for dishes not on the menu to be ordered" do
+      expect{subject.select_dish(:fish, 1)}.to raise_error 'dish not on menu'
     end
   end
 
@@ -51,6 +51,10 @@ describe Takeaway do
 
     it{ is_expected.to respond_to(:check_payment).with(1).argument }
 
+    before do
+      allow(Texter).to receive :send_message
+    end
+
     it 'says payment correct when amount given matches order total' do
       subject.select_dish(:bacon, 2)
       expect(subject.check_payment 5.00).to eq 'payment correct'
@@ -58,7 +62,15 @@ describe Takeaway do
 
     it 'says payment incorrect when amount given doesn\'t match order total' do
       subject.select_dish(:bacon, 2)
-      expect{ subject.check_payment 4.00 }.to raise_error 'incorrect payment amount'
+      expect{ subject.check_payment 4.00  }.to raise_error 'incorrect payment amount'
+    end
+
+    it 'sends a message via the text sender' do #  ensure you stub the call to the twilio gem, otherwise you'll be sending texts on every test-run
+      expect(Texter).to receive :send_message
+
+      subject.select_dish :bacon, 2
+
+      subject.check_payment 5.00, Texter
     end
   end
 
